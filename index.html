@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Orviz!</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
+        <style>
+         /* The style of the tooltip */
+         .g6-tooltip {
+             border: 1px solid #e2e2e2;
+             border-radius: 4px;
+             font-family: sans-serif;
+             font-size: 16px;
+             color: #545454;
+             background-color: #fffacd ;
+             padding: 2px 3px;
+             box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+         }
+         .g6-edge-tooltip {
+             border: 1px solid #e2e2e2;
+             border-radius: 4px;
+             font-family: sans-serif;
+             font-size: 17px;
+             color: #000000;
+             background-color: rgba(255, 255, 255, 0.9);
+             padding: 0px 6px ;
+             box-shadow: rgb(174, 174, 174) 0px 0px 10px;
+             max-width: 500px;
+         }
+         .container-1 {
+             display: grid;
+             grid-auto-flow: column;
+             grid-template-columns: 66% auto;
+
+         }
+
+        </style>
+    </head>
+    <body>
+
+        <button class="button" onclick="hideJournalNodes()">Hide Journal Entries</button>
+        <div class="container-1">
+            <div id="mountNode"></div>
+            <iframe id="notebrowser" src="placeholder.html"></iframe>
+        </div>
+
+        <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.4.7/dist/g6.min.js"></script>
+
+        <script>
+
+         /* const dataObj = require("./processed.json"); */
+         function getJournalIDs(dataObj) {
+             return dataObj.nodes.filter(node => node.isJournal == true).map(node => node.id)
+         }
+
+         function go(loc) {
+             document.getElementById('notebrowser').src = loc;
+             console.log('done');
+         }
+
+         function hideJournalNodes() {
+             let journalIDs = graph.getNodes().filter(n => n._cfg.id.includes("journal")).map(n => n._cfg.id)
+             journalIDs.map(n => graph.hideItem(n))
+
+         }
+
+        </script>
+        <script>
+
+
+         /* const orgRoamDirectory = require('./config.json').orgRoamDirectory; */
+
+
+         const graph = new G6.Graph({
+             container: 'mountNode',
+             width: 0.65*window.innerWidth,
+             height: window.innerHeight*0.96,
+             /* fitView: true, */
+             /* fitViewPadding: [20, 40, 50, 20], */
+
+             /* layout: {
+              *     type: 'fruchterman',
+              *     center: [200, 200], // The center of the graph by default
+              *     gravity: 0,
+              *     speed: 200,
+              *     preventOverlap: true,
+              *     clustering: true,
+              *     clusterGravity: 2,
+              *     maxIteration: 2000,
+              *     workerEnabled: true, // Whether to activate web-worker
+              * }, */
+
+             layout: {
+                 type: 'force',
+                 linkDistance: 100, // The link distance is 100
+                 nodeStrength: -70,
+                 nodeSpacing: 60,
+                 preventOverlap: true,
+             },
+
+             modes: {
+                 default: ['drag-canvas', 'zoom-canvas', 'drag-node',
+                           {
+                               type: 'tooltip', // Tooltip
+                               formatText(model) {
+                                   // The content of tooltip
+                                   const text = model.label;
+                                   return text;
+                               },
+                               style: {
+                                   font: 'Source Code Pro',},
+
+                           },
+                           {
+                               type: 'edge-tooltip',
+                               formatText(model) {
+                                   const text = model.content;
+                                   return text;
+                               },},
+                           'activate-relations',
+
+                 ], // Allow users to drag canvas, zoom canvas, and drag nodes
+             },
+
+             /* animate: true,
+              * animateCfg: {
+              *     duration: 10, // Number, the duration of one animation
+              *     easing: 'linearEasing', // String, the easing function
+              * }, */
+             defaultNode: {
+                 size: 30, // The size of nodes
+                 // ...                 // The other properties
+                 // The style properties of nodes
+                 style: {
+                     fill: '#bae637',
+                     stroke: '#eaff8f',
+                     lineWidth: 5,
+                     radius: 10,
+                 },
+                 // The properties for label of nodes
+                 labelCfg: {
+                     // The style properties for the label
+                     style: {
+                         fill: '#212121', // The color of the text
+                         /* stroke: '#212121', */
+                         font: 'Source Code Pro',
+                         fontSize: 18,
+                     },
+                     /* position: 'bottom', */
+                 },
+             },
+             defaultEdge: {
+                 type: 'cubic',
+                 // ... Other properties for edges
+                 style: {
+                     stroke: '#d3d3d3',
+                     lineWidth: 4,
+                     // ... Other style properties
+                 },
+             },
+             nodeStateStyles: {
+                 active: {
+                     opacity: 1,
+                 },
+                 inactive: {
+                     opacity: 0.2,
+                 },
+             },
+             edgeStateStyles: {
+                 active: {
+                     stroke: '#212121',
+                 },
+             },
+
+         });
+
+         graph.on('node:click', ev => {
+             const shape = ev.target;
+             const node = ev.item;
+             /* console.log(shape, node) */
+             /* showDocument(node.get('model')['label']); */
+             let nodeid = node.get('model')['id'];
+             nodeid = nodeid.replace(/.org"$/, '.html');
+             //  nodeid = nodeid.replace(/.*org\//, ''); //
+             /* getConfig().then( ele => console.log(ele.orgRoamDirectory)) */
+             getConfig().then(ele =>
+                 {nodeid = nodeid.replace(ele.orgRoamDirectory, '');
+                     nodeid = nodeid.replace("\"", '') // remove one extra " in the beginning
+                     console.log(nodeid);
+                     /* nodeloc = ele.orvizDirectory + 'public/' + nodeid // location of the note */
+                     nodeloc = './public/' + nodeid // location of the note
+
+                     console.log(nodeloc);
+                     /* nodeloc = 'public/' + nodeid // location of the note */
+                     go(nodeloc);
+
+                 }
+             )
+             /* go(nodeloc); */
+
+             /* console.log(nodeid) */
+
+             // replace everythig till the org-directory name
+             /* const regex = new RegExp(`ReGeX${orgRoamDirectory}ReGeX`);
+                /* nodeid = nodeid.replace(regex, '') // remove harcoding from this */
+
+             /* nodeloc = '/public/' + nodeid // location of the note */
+             /* console.log(nodeloc) */
+             /* go(nodeloc); */
+         });
+
+         const main = async () => {
+             const response = await fetch(
+                 'processed.json',
+             );
+             const remoteData = await response.json();
+             graph.data(remoteData);
+             graph.render();};
+         main();
+
+         const getConfig = async () => {
+             const response = await fetch('config.json',);
+             const configData = await response.json();
+             /* console.log(configData); */
+             return configData;
+         }
+
+         /* getConfig().then( ele => console.log(ele)) */
+         /* const oroooo = getConfig().then( ele => return ele)) */
+         /* console.log(a); */
+
+         /* const c = getConfig(); */
+         /* const d = fetch('config.json',).json(); */
+         /* console.log(d); */
+         /* getConfig().then(x => console.log(x);) */
+         /* console.log(orgRoamDirectory); */
+
+        </script>
+
+    </body>
+</html>
