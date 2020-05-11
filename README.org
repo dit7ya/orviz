@@ -6,8 +6,9 @@
 
 *** Requirements
 
-**** node and npm
-**** http-server
+**** node and yarn
+**** Node Dependencies
+     ~yarn global add better-sqlite3 pdc http-server~
 **** (of course) updated installation of Emacs with org-roam
 
 *** Note Browser Setup
@@ -66,7 +67,7 @@
                :html-postamble nil)))
     #+end_src
 
-*** Orviz setup
-    1. Create an ~orviz~ directory somewhere easily accessible in your filesystem.
-    2. ~cd~ into it.
-    3. ~mkdir -p static public~
+# *** Orviz setup
+#     1. Create an ~orviz~ directory somewhere easily accessible in your filesystem.
+#     2. ~cd~ into it.
+#     3. ~mkdir -p static public~
